@@ -39,6 +39,7 @@ import builtins
 import wx
 
 from definitions import *
+import i18n
 import config
 import user_config
 import main_directory
@@ -925,8 +926,15 @@ class main_window(wx.Frame):
 			# Add the Debug menu to the menu bar.
 			self.main_menu.Append(self.debug_menu, builtins._("Debug"))
 		
+		# Refresh menu labels after all items are created.
+		self._retranslate_menus()
+		
 		# Attach the menu bar to the window.
 		self.SetMenuBar(self.main_menu)
+		self._debug_dump_menus()
+		i18n.debug_collect_menus(self.main_menu)
+		if hasattr(self, "GetToolBar"):
+			i18n.debug_collect_toolbar(self.GetToolBar())
 		
 		# A dictionary of dialogs corresponding to target menu items.
 		self.target_dialogs_by_id = {self.add_reflection_target_ID: reflection_target_dialog,
@@ -1033,6 +1041,119 @@ class main_window(wx.Frame):
 		                           self.calculate_reflection_monitoring_reverse_ID: data_holder.reflection_monitoring_reverse_data,
 		                           self.calculate_transmission_monitoring_reverse_ID: data_holder.transmission_monitoring_reverse_data,
 		                           self.calculate_ellipsometry_monitoring_reverse_ID: data_holder.ellipsometry_monitoring_reverse_data}
+	
+	
+	######################################################################
+	#                                                                    #
+	# _retranslate_menus                                                 #
+	#                                                                    #
+	######################################################################
+	def _retranslate_menus(self):
+		"""Refresh menu labels after construction"""
+		
+		def refresh_menu(menu):
+			if not menu:
+				return
+			for item in menu.GetMenuItems():
+				if item.IsSeparator():
+					continue
+				submenu = item.GetSubMenu()
+				if submenu:
+					refresh_menu(submenu)
+				label = item.GetItemLabel()
+				if not label:
+					continue
+				if "\t" in label:
+					base, accel = label.split("\t", 1)
+					new_label = "%s\t%s" % (builtins._(base), accel)
+				else:
+					new_label = builtins._(label)
+				if hasattr(item, "SetItemLabelText"):
+					item.SetItemLabelText(new_label)
+				else:
+					item.SetItemLabel(new_label)
+		
+		for menu in (getattr(self, "file_menu", None),
+		             getattr(self, "edit_menu", None),
+		             getattr(self, "project_menu", None),
+		             getattr(self, "filter_menu", None),
+		             getattr(self, "optimization_menu", None),
+		             getattr(self, "tools_menu", None),
+		             getattr(self, "help_menu", None)):
+			refresh_menu(menu)
+		
+		if self.main_menu:
+			for i in range(self.main_menu.GetMenuCount()):
+				label = self.main_menu.GetMenuLabel(i)
+				if not label:
+					continue
+				if "\t" in label:
+					base, accel = label.split("\t", 1)
+					new_label = "%s\t%s" % (builtins._(base), accel)
+				else:
+					new_label = builtins._(label)
+				self.main_menu.SetMenuLabel(i, new_label)
+	
+	
+	######################################################################
+	#                                                                    #
+	# _debug_dump_menus                                                  #
+	#                                                                    #
+	######################################################################
+	def _debug_dump_menus(self):
+		"""Dump menu labels when i18n debug is enabled."""
+		
+		if os.environ.get("OPENFILTERS_I18N_DEBUG") != "1":
+			return
+		
+		def item_label(item):
+			if hasattr(item, "GetItemLabelText"):
+				return item.GetItemLabelText()
+			return item.GetItemLabel()
+		
+		def dump_menu(menu, indent=""):
+			if not menu:
+				return
+			for item in menu.GetMenuItems():
+				if item.IsSeparator():
+					continue
+				label = item_label(item)
+				print('%s  [item] "%s" (id=%s)' % (indent, label, item.GetId()))
+				submenu = item.GetSubMenu()
+				if submenu:
+					dump_menu(submenu, indent + "  ")
+		
+		if self.main_menu:
+			for i in range(self.main_menu.GetMenuCount()):
+				label = self.main_menu.GetMenuLabel(i)
+				print('[menu] "%s"' % label)
+				dump_menu(self.main_menu.GetMenu(i))
+	
+	
+	######################################################################
+	#                                                                    #
+	# _dialog_buttons_from_style                                         #
+	#                                                                    #
+	######################################################################
+	def _dialog_buttons_from_style(self, style):
+		"""Get dialog button labels from style flags."""
+		
+		def stock_label(stock_id, fallback):
+			if hasattr(wx, "GetStockLabel"):
+				label = wx.GetStockLabel(stock_id)
+				if label:
+					return label
+			return fallback
+		
+		buttons = []
+		if style & wx.YES_NO:
+			buttons.append(stock_label(wx.ID_YES, "Yes"))
+			buttons.append(stock_label(wx.ID_NO, "No"))
+		if style & wx.OK:
+			buttons.append(stock_label(wx.ID_OK, "OK"))
+		if style & wx.CANCEL:
+			buttons.append(stock_label(wx.ID_CANCEL, "Cancel"))
+		return buttons
 	
 	
 	######################################################################
@@ -1427,7 +1548,8 @@ class main_window(wx.Frame):
 			filename = self.open_example_IDs[id]
 		
 		else:
-			window = wx.FileDialog(self, "Open Project", os.getcwd(), "", project_wildcard, style = wx.OPEN|wx.CHANGE_DIR)
+			i18n.debug_collect_dialog("Open Project", self._dialog_buttons_from_style(wx.OK|wx.CANCEL))
+			window = wx.FileDialog(self, "Open Project", os.getcwd(), "", project_wildcard, style = wx.FD_OPEN|wx.FD_CHANGE_DIR)
 			
 			answer = window.ShowModal()
 			if answer == wx.ID_OK:
@@ -1483,7 +1605,9 @@ class main_window(wx.Frame):
 		
 		# Offer the user the possibility to save a modified project.
 		if self.project.get_modified():
-			dialog = wx.MessageDialog(self, "The project has been modified, do you want to save it before closing it?", "Save project?", wx.ICON_EXCLAMATION|wx.YES_NO|wx.CANCEL|wx.YES_DEFAULT)
+			dialog_style = wx.ICON_EXCLAMATION|wx.YES_NO|wx.CANCEL|wx.YES_DEFAULT
+			i18n.debug_collect_dialog("Save project?", self._dialog_buttons_from_style(dialog_style), "The project has been modified, do you want to save it before closing it?")
+			dialog = wx.MessageDialog(self, "The project has been modified, do you want to save it before closing it?", "Save project?", dialog_style)
 			answer = dialog.ShowModal()
 			if answer == wx.ID_CANCEL:
 				return
@@ -1545,7 +1669,8 @@ class main_window(wx.Frame):
 		This method takes a single argument:
 		  event              the event."""
 		
-		window = wx.FileDialog(self, "Save Project as", os.getcwd(), os.path.basename(self.project_filename), project_wildcard, style = wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+		i18n.debug_collect_dialog("Save Project as", self._dialog_buttons_from_style(wx.OK|wx.CANCEL))
+		window = wx.FileDialog(self, "Save Project as", os.getcwd(), os.path.basename(self.project_filename), project_wildcard, style = wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT|wx.FD_CHANGE_DIR)
 		
 		answer = window.ShowModal()
 		if answer == wx.ID_OK:
@@ -1635,7 +1760,9 @@ class main_window(wx.Frame):
 		
 		# Offer the user the possibility to save a modified project.
 		if self.project and self.project.get_modified():
-			dialog = wx.MessageDialog(self, "The project has been modified, do you want to save it before quitting?", "Save project?", wx.ICON_EXCLAMATION|wx.YES_NO|wx.CANCEL|wx.YES_DEFAULT)
+			dialog_style = wx.ICON_EXCLAMATION|wx.YES_NO|wx.CANCEL|wx.YES_DEFAULT
+			i18n.debug_collect_dialog("Save project?", self._dialog_buttons_from_style(dialog_style), "The project has been modified, do you want to save it before quitting?")
+			dialog = wx.MessageDialog(self, "The project has been modified, do you want to save it before quitting?", "Save project?", dialog_style)
 			answer = dialog.ShowModal()
 			if answer == wx.ID_CANCEL:
 				return
@@ -2154,7 +2281,8 @@ class main_window(wx.Frame):
 		elif id == self.export_back_index_profile_ID:
 			side = BACK
 		
-		window = wx.FileDialog(self, "Export index profile", os.getcwd(), "", style = wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+		i18n.debug_collect_dialog("Export index profile", self._dialog_buttons_from_style(wx.OK|wx.CANCEL))
+		window = wx.FileDialog(self, "Export index profile", os.getcwd(), "", style = wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT|wx.FD_CHANGE_DIR)
 		
 		answer = window.ShowModal()
 		if answer == wx.ID_OK:
@@ -2280,7 +2408,8 @@ class main_window(wx.Frame):
 		This method takes a single argument:
 		  event              the event."""
 		
-		window = wx.FileDialog(self, "Export results as text", os.getcwd(), "", style = wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+		i18n.debug_collect_dialog("Export results as text", self._dialog_buttons_from_style(wx.OK|wx.CANCEL))
+		window = wx.FileDialog(self, "Export results as text", os.getcwd(), "", style = wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT|wx.FD_CHANGE_DIR)
 		answer = window.ShowModal()
 		if answer == wx.ID_OK:
 			self.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
@@ -2316,7 +2445,8 @@ class main_window(wx.Frame):
 		This method takes a single argument:
 		  event              the event."""
 		
-		window = wx.FileDialog(self, "Export results as figure", os.getcwd(), "", GUI_plot.FIGURE_WILDCARD, style = wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+		i18n.debug_collect_dialog("Export results as figure", self._dialog_buttons_from_style(wx.OK|wx.CANCEL))
+		window = wx.FileDialog(self, "Export results as figure", os.getcwd(), "", GUI_plot.FIGURE_WILDCARD, style = wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT|wx.FD_CHANGE_DIR)
 		answer = window.ShowModal()
 		if answer == wx.ID_OK:
 			self.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))

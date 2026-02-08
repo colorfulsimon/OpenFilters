@@ -30,6 +30,15 @@ import materials
 import color
 
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
+
 
 ########################################################################
 #                                                                      #
@@ -181,7 +190,7 @@ class int_validator(wx.PyValidator):
 					event.Skip()
 					return
 		
-		if not wx.Validator_IsSilent(): wx.Bell()
+		if not _validator_is_silent(): wx.Bell()
 		
 		# Since event.Skip() is not called, the event is not passed to the
 		# control.
@@ -234,7 +243,7 @@ class int_validator(wx.PyValidator):
 					error = True
 		
 		if error:
-			if not wx.Validator_IsSilent(): wx.Bell()
+			if not _validator_is_silent(): wx.Bell()
 			window.SetFocus()
 			window.SetSelection(0, len(answer))
 			window.Refresh()
@@ -459,7 +468,7 @@ class float_validator(wx.PyValidator):
 					event.Skip()
 					return
 		
-		if not wx.Validator_IsSilent(): wx.Bell()
+		if not _validator_is_silent(): wx.Bell()
 		
 		# Since event.Skip() is not called, the event is not passed to the
 		# control.
@@ -525,7 +534,7 @@ class float_validator(wx.PyValidator):
 						error = True
 		
 		if error:
-			if not wx.Validator_IsSilent(): wx.Bell()
+			if not _validator_is_silent(): wx.Bell()
 			window.SetFocus()
 			window.SetSelection(0, len(answer))
 			window.Refresh()
@@ -694,7 +703,7 @@ class material_validator(wx.PyValidator):
 		# If an error occured, set the focus to the control and return
 		# False.
 		if error:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.SetSelection(0, len(answer))

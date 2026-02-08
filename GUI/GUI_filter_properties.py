@@ -33,6 +33,14 @@ import graded
 from .GUI_validators import int_validator, float_validator, material_validator,\
                            illuminant_validator, observer_validator
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
 
 
 ########################################################################
@@ -100,7 +108,7 @@ class filter_property_dialog_validator(wx.PyValidator):
 		from_wavelength = float(parent.from_wavelength_box.GetValue())
 		to_wavelength = float(parent.to_wavelength_box.GetValue())
 		if to_wavelength < from_wavelength:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.to_wavelength_box.SetFocus()
 			parent.to_wavelength_box.SetSelection(0, 1000)
@@ -111,7 +119,7 @@ class filter_property_dialog_validator(wx.PyValidator):
 		# from_wavelength and to_wavelength.
 		by_wavelength = float(parent.by_wavelength_box.GetValue())
 		if by_wavelength >= (to_wavelength - from_wavelength):
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.by_wavelength_box.SetFocus()
 			parent.by_wavelength_box.SetSelection(0, 1000)

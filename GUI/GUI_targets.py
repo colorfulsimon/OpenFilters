@@ -37,6 +37,14 @@ import color
 
 from .GUI_validators import float_validator, int_validator
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
 
 
 one_hundred_eighty_over_pi = 180.0/math.pi
@@ -2241,7 +2249,7 @@ class target_point_grid_validator(wx.PyValidator):
 			
 		
 		if error:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.Refresh()

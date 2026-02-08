@@ -38,6 +38,14 @@ import array
 import wx
 from wx.lib.dialogs import ScrolledMessageDialog
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
 from moremath import limits
 
 from . import GUI_validators
@@ -3564,7 +3572,7 @@ class properties_dialog_validator(wx.PyValidator):
 		y_to = float(parent.y_to_box.GetValue())
 		
 		if not x_from < x_to:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.x_to_box.SetFocus()
 			parent.x_to_box.SetSelection(0, len(parent.x_to_box.GetValue()))
@@ -3572,7 +3580,7 @@ class properties_dialog_validator(wx.PyValidator):
 			return False
 		
 		if not y_from < y_to:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.y_to_box.SetFocus()
 			parent.y_to_box.SetSelection(0, len(parent.y_to_box.GetValue()))

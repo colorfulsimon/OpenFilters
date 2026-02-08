@@ -38,16 +38,19 @@ import i18n
 import localize
 import user_config
 
-import GUI
-
-
-
 # Initialize i18n before any GUI text is created.
 def init_i18n():
 	# 根据 user_config 初始化语言
 	i18n.init_from_config()
 	# 将 i18n._ 安装到 builtins._，后续所有模块可以直接使用 _("Text")
 	i18n.install_builtin()
+
+
+# Ensure i18n is initialized before importing GUI.
+init_i18n()
+
+
+import GUI
 
 
 ########################################################################
@@ -74,9 +77,6 @@ def run(interface):
 
 
 if __name__ == "__main__":
-	# Initialize i18n before any user-visible text is created.
-	init_i18n()
-	
 	# Allow setting of the user material directory through a command-line
 	# argument. This way allows a workaroud for people on OSs where the
 	# directory chooser crashes.

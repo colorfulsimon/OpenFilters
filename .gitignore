@@ -1,0 +1,14 @@
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# venv
+.venv*/
+venv/
+
+# i18n runtime artifacts
+i18n_dump.json
+i18n_missing.json
+i18n_ui_english.json

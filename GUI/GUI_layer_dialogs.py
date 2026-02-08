@@ -73,7 +73,7 @@ class layer_dialog(wx.Dialog):
 		self.filter = filter
 		self.description = description
 		
-		wx.Dialog.__init__(self, parent, -1, self.title, style = wx.CAPTION)
+		wx.Dialog.__init__(self, parent, -1, builtins._(self.title), style = wx.CAPTION)
 		
 		self.SetValidator(self.validator())
 		
@@ -614,7 +614,7 @@ class layer_dialog(wx.Dialog):
 class simple_layer_dialog(layer_dialog):
 	"""A dialog to add or modify an homogeneous layer"""
 	
-	title = builtins._("Simple layer")
+	title = "Simple layer"
 	
 	operation = ADD
 	
@@ -939,7 +939,7 @@ class import_layer_dialog(layer_dialog):
 	"""A dialog to add add a graded-index layer while reading its index
 	profile in a text file"""
 	
-	title = builtins._("Import layer")
+	title = "Import layer"
 	
 	operation = ADD
 	
@@ -1055,7 +1055,7 @@ class import_layer_dialog(layer_dialog):
 class remove_layer_dialog(layer_dialog):
 	"""A dialog to remove a layer from a filter"""
 	
-	title = builtins._("Remove layer")
+	title = "Remove layer"
 	
 	operation = REMOVE
 	

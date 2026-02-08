@@ -302,7 +302,7 @@ class illuminants(object):
 		The method takes no arguments and return a list of all the
 		illuminants in alphabetic order."""
 		
-		illuminant_names = self.illuminants.keys()
+		illuminant_names = list(self.illuminants.keys())
 		illuminant_names.sort()
 		
 		return illuminant_names
@@ -386,7 +386,7 @@ class observers(object):
 		The method takes no arguments and return a list of all the obervers
 		in alphabetic order."""
 		
-		observer_names = self.observers.keys()
+		observer_names = list(self.observers.keys())
 		observer_names.sort()
 		
 		return observer_names

@@ -44,6 +44,15 @@ from GUI import GUI_layer_dialogs
 from GUI.GUI_validators import int_validator, float_validator
 
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
+
 
 sqrt_epsilon = math.sqrt(limits.epsilon)
 
@@ -1525,7 +1534,7 @@ class rugate_grid_validator(wx.PyValidator):
 						window.SelectBlock(row, col, row, col, True)
 		
 		if error:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.Refresh()

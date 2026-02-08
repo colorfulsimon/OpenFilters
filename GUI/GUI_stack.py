@@ -34,6 +34,14 @@ from stack import stack, analyse_stack_formula, stack_error, MIN, MAX
 from .GUI_layer_dialogs import layer_dialog
 from .GUI_validators import float_validator, material_validator
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
 
 
 ########################################################################
@@ -113,7 +121,7 @@ class stack_validator(wx.PyValidator):
 		for symbol in used_symbols:
 			if not symbol in defined_symbols:
 				position = formula.index(symbol)
-				if not wx.Validator_IsSilent():
+				if not _validator_is_silent():
 					wx.Bell()
 				parent.formula_box.SetFocus()
 				parent.formula_box.SetSelection(position, position+1)
@@ -648,7 +656,7 @@ class formula_validator(wx.PyValidator):
 			event.Skip()
 			return
 		
-		if not wx.Validator_IsSilent():
+		if not _validator_is_silent():
 			wx.Bell()
 		
 		# By don't calling event.Skip(), the event is not passed to the
@@ -687,7 +695,7 @@ class formula_validator(wx.PyValidator):
 		try:
 			analyse_stack_formula(answer)
 		except stack_error as error:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.SetSelection(error.get_position(), error.get_position()+1)
@@ -722,7 +730,7 @@ class formula_validator(wx.PyValidator):
 		try:
 			analyse_stack_formula(answer)
 		except stack_error as error:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.SetSelection(error.get_position(), error.get_position()+1)
@@ -826,7 +834,7 @@ class symbol_validator(wx.PyValidator):
 		
 		# Accept only lowercase and uppercase.
 		if char not in string.ascii_letters:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			return
 		
@@ -839,7 +847,7 @@ class symbol_validator(wx.PyValidator):
 		# be nothing in the box to enter a new caracter or what is already
 		# there must be selected.
 		if len(answer) - (selection[1]-selection[0]) + 1 > 1:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			return
 		
@@ -847,7 +855,7 @@ class symbol_validator(wx.PyValidator):
 		# at this point won't return the content of the presently edited
 		# window since the value has not been passed yet).
 		if char in window.GetParent().get_symbols():
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			return
 		
@@ -872,7 +880,7 @@ class symbol_validator(wx.PyValidator):
 		
 		# The symbol must be only one caracter long.
 		if len(answer) > 1:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.SetSelection(0, len(answer))
@@ -906,7 +914,7 @@ class symbol_validator(wx.PyValidator):
 		
 		# The symbol must be only one caracter long.
 		if len(answer) > 1:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			window.SetFocus()
 			window.SetSelection(0, len(answer))

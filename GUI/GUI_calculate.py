@@ -34,6 +34,14 @@ from .GUI_validators import float_validator,\
                            illuminant_validator,\
                            observer_validator
 
+def _validator_is_silent():
+	if hasattr(wx, "Validator_IsSilent"):
+		return wx.Validator_IsSilent()
+	validator = getattr(wx, "Validator", None)
+	if validator and hasattr(validator, "IsSilent"):
+		return validator.IsSilent()
+	return False
+
 
 
 ########################################################################
@@ -129,7 +137,7 @@ class calculate_color_trajectory_dialog_validator(calculate_dialog_validator):
 		from_angle = float(parent.from_angle_box.GetValue())
 		to_angle = float(parent.to_angle_box.GetValue())
 		if to_angle < from_angle:
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.to_angle_box.SetFocus()
 			parent.to_angle_box.SetSelection(0, 1000)
@@ -140,7 +148,7 @@ class calculate_color_trajectory_dialog_validator(calculate_dialog_validator):
 		# from_angle and to_angle.
 		by_angle = float(parent.by_angle_box.GetValue())
 		if by_angle >= (to_angle - from_angle):
-			if not wx.Validator_IsSilent():
+			if not _validator_is_silent():
 				wx.Bell()
 			parent.by_angle_box.SetFocus()
 			parent.by_angle_box.SetSelection(0, 1000)
